@@ -1,0 +1,8 @@
+# Python bytecode (icon generation tools)
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
