@@ -7,7 +7,7 @@ Generate the hotfix mod icon.
 - overlay: big Chinese title "热修补丁" with outline + shadow, like the
   reference workshop icon
 - output: icon_source.png (authoring), modicon.tex (512x512 DXT5 + mips),
-  modicon.xml, preview.png
+  modicon.xml, preview.png (same square cover at 1024x1024, no side text)
 
 IMPORTANT orientation note:
 Klei's KTEX stores pixel rows bottom-up.  ktech/the autocompiler flip the
@@ -31,8 +31,6 @@ COVER_CROP = (0, 0, 824, 824)  # UM's modicon.xml crops this square
 
 WHITE = (244, 242, 238)
 INK = (10, 8, 10)
-AMBER = (210, 150, 58)
-MUTED = (205, 195, 185)
 
 TEXT = "热修补丁"
 
@@ -52,61 +50,44 @@ def fit_font(path, text, max_width, start_size, stroke_width=0):
     return font(path, 24), 24
 
 
-def make_icon():
-    im = Image.open(COVER).convert("RGB").crop(COVER_CROP).resize((SIZE, SIZE), Image.LANCZOS)
+def compose(size):
+    """Cover art + big title, at any square size (512 for the icon,
+    1024 for the workshop preview)."""
+    k = size / 512.0
+
+    im = Image.open(COVER).convert("RGB").crop(COVER_CROP).resize((size, size), Image.LANCZOS)
     im = im.convert("RGBA")
 
     # subtle vignette so the overlaid text is readable in the corners
-    vignette = Image.new("L", (SIZE, SIZE), 0)
-    ImageDraw.Draw(vignette).ellipse((-160, -160, SIZE + 160, SIZE + 160), fill=255)
-    vignette = vignette.filter(ImageFilter.GaussianBlur(110))
-    dark = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    margin = int(160 * k)
+    vignette = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(vignette).ellipse((-margin, -margin, size + margin, size + margin), fill=255)
+    vignette = vignette.filter(ImageFilter.GaussianBlur(max(8, int(110 * k))))
+    dark = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     dark.putalpha(vignette.point(lambda v: int((255 - v) * 0.35)))
     im.alpha_composite(dark)
 
-    cx, cy = SIZE // 2, 256
-    f, fsize = fit_font(r"C:\Windows\Fonts\msyhbd.ttc", TEXT, 466, 110, stroke_width=8)
+    stroke = max(3, int(round(8 * k)))
+    cx, cy = size // 2, int(size * 0.5)
+    f, fsize = fit_font(r"C:\Windows\Fonts\msyhbd.ttc", TEXT, int(466 * k),
+                        int(110 * k), stroke_width=stroke)
 
     # drop shadow
-    shadow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    shadow_offset = max(2, int(round(11 * k)))
+    shadow_stroke = max(4, int(round(11 * k)))
+    shadow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.text((cx + 2, cy + 11), TEXT, font=f, fill=(0, 0, 0, 205), anchor="mm",
-            stroke_width=11, stroke_fill=(0, 0, 0, 135))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(4))
+    sd.text((cx + 2, cy + shadow_offset), TEXT, font=f, fill=(0, 0, 0, 205), anchor="mm",
+            stroke_width=shadow_stroke, stroke_fill=(0, 0, 0, 135))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(max(2, int(round(4 * k)))))
     im.alpha_composite(shadow)
 
     # main text: white fill + dark outline
     d = ImageDraw.Draw(im)
     d.text((cx, cy), TEXT, font=f, fill=WHITE + (255,), anchor="mm",
-           stroke_width=8, stroke_fill=INK + (255,))
+           stroke_width=stroke, stroke_fill=INK + (255,))
 
     return im.convert("RGB"), fsize
-
-
-def make_preview(icon):
-    W, H = 1200, 600
-    bg = Image.open(COVER).convert("RGB").resize((W, W), Image.LANCZOS).crop((0, 0, W, H))
-    bg = bg.filter(ImageFilter.GaussianBlur(8)).convert("RGBA")
-    overlay = Image.new("RGBA", (W, H), (8, 4, 4, 170))
-    bg.alpha_composite(overlay)
-
-    left = icon.resize((520, 520), Image.LANCZOS).convert("RGBA")
-    bg.alpha_composite(left, (40, 40))
-
-    d = ImageDraw.Draw(bg)
-    x = 620
-    d.text((x, 150), "永不妥协测试版", font=font(r"C:\Windows\Fonts\simhei.ttf", 46),
-           fill=WHITE + (255,), anchor="lm")
-    d.text((x, 210), "热修补丁", font=font(r"C:\Windows\Fonts\simhei.ttf", 46),
-           fill=AMBER + (255,), anchor="lm")
-    d.line((x, 258, 1140, 258), fill=(120, 60, 40, 200), width=3)
-    d.text((x, 310), "Uncompromising Beta Hotfix", font=font(r"C:\Windows\Fonts\arialbd.ttf", 28),
-           fill=WHITE + (255,), anchor="lm")
-    d.text((x, 360), "递归 / 定时任务导致的内存泄漏热修", font=font(r"C:\Windows\Fonts\msyh.ttc", 24),
-           fill=MUTED + (255,), anchor="lm")
-    d.text((x, 400), "6 项修复可单独开关 · 服务端模组", font=font(r"C:\Windows\Fonts\msyh.ttc", 24),
-           fill=MUTED + (255,), anchor="lm")
-    return bg.convert("RGB")
 
 
 # ---------------- DXT5 / BC3 encoder (same as before) ----------------
@@ -194,7 +175,7 @@ def mip_chain(img, count):
 
 
 def main():
-    icon, fsize = make_icon()
+    icon, fsize = compose(SIZE)
     icon.save(os.path.join(HERE, "icon_source.png"))
     print("icon text size:", fsize)
 
@@ -212,7 +193,9 @@ def main():
            '<Elements><Element name="modicon.tex" u1="0" u2="1" v1="0" v2="1" /></Elements></Atlas>')
     open(os.path.join(MOD_DIR, "modicon.xml"), "w", encoding="utf-8").write(xml)
 
-    make_preview(icon).save(os.path.join(MOD_DIR, "preview.png"))
+    # workshop preview: same square cover, no side text
+    preview, _ = compose(1024)
+    preview.save(os.path.join(MOD_DIR, "preview.png"))
 
     print("tex size:", len(tex), "expected:", len(header) + 349552)
     print("wrote modicon.tex / modicon.xml / preview.png")

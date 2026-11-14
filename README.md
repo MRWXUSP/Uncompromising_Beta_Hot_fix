@@ -32,7 +32,7 @@ UncompromisingBetaHotfix/
 ├── modinfo.lua          -- 模组信息与配置项
 ├── modmain.lua          -- 入口，读取配置并加载 hotfix/
 ├── modicon.tex / .xml   -- 模组图标（UM Beta 封面 + 标题文字，512x512）
-├── preview.png          -- 创意工坊预览图（可选）
+├── preview.png          -- 创意工坊预览图（同封面，1024x1024，无侧边文字）
 ├── hotfix/
 │   ├── util.lua                -- 日志 / upvalue 工具
 │   ├── fix_woby.lua            -- ① Woby 变身任务
