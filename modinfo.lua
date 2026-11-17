@@ -16,7 +16,7 @@ Uncompromising Beta Hotfix
 ]]
 
 author = "Uncompromising Hotfix (community)"
-version = "0.1.1"
+version = "0.1.2"
 
 api_version = 10
 
@@ -73,6 +73,12 @@ configuration_options =
 
     BinaryConfig("fix_task_handle_leak", "任务/引用表泄漏",
         "修复 Ocupus 触手表只增不减、猴子寻石芽周期任务句柄被覆盖等泄漏。", true),
+
+    BinaryConfig("fix_shove_entity_leak", "击退实体泄漏",
+        "修复幽灵推击 / 击退产生的 um_shoveentity 在目标提前死亡或消失后残留为隐形实体。", true),
+
+    BinaryConfig("fix_pathfinding_wall_leak", "寻路墙残留",
+        "修复 UMAddPathfindingWalls 在实体已被移除后仍写入寻路墙、留下永久不可通行点。", true),
 
     BinaryConfig("verbose_log", "调试日志",
         "在服务端日志里输出每个补丁的检测与执行结果。", false),

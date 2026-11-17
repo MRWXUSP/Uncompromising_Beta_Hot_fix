@@ -13,7 +13,7 @@ local G = GLOBAL
 local HF =
 {
     modname = modname,
-    version = "0.1.1",
+    version = "0.1.2",
     flags = {},
     results = {},
     verbose = GetModConfigData("verbose_log") == true,
@@ -33,6 +33,8 @@ HF.flags =
     fix_unbounded_retry = Flag("fix_unbounded_retry"),
     fix_immediate_call = Flag("fix_immediate_call"),
     fix_task_handle_leak = Flag("fix_task_handle_leak"),
+    fix_shove_entity_leak = Flag("fix_shove_entity_leak"),
+    fix_pathfinding_wall_leak = Flag("fix_pathfinding_wall_leak"),
 }
 
 modimport("hotfix/util")
@@ -49,5 +51,7 @@ modimport("hotfix/fix_rne_leak")
 modimport("hotfix/fix_unbounded_retry")
 modimport("hotfix/fix_immediate_call")
 modimport("hotfix/fix_task_handle_leak")
+modimport("hotfix/fix_shove_entity")
+modimport("hotfix/fix_pathfinding_wall")
 
 HF.log("加载完成（version %s）", HF.version)
